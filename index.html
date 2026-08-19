@@ -63,11 +63,16 @@
 
 <div class="card">
   <h1>Reset your password</h1>
-  <p class="sub">Enter a new password for your account.</p>
 
-  <div id="verifying" class="status">Verifying reset link…</div>
+  <!-- Step 1: explicit confirm button (avoids iOS Mail link-prefetch burning the token) -->
+  <div id="confirmStep">
+    <p class="sub">Click below to verify this is you and continue.</p>
+    <button id="confirmBtn">Confirm and continue</button>
+  </div>
 
+  <!-- Step 2: new password form -->
   <form id="resetForm" style="display:none;">
+    <p class="sub">Enter a new password for your account.</p>
     <label for="password">New password</label>
     <input type="password" id="password" minlength="6" required placeholder="At least 6 characters" />
 
@@ -84,13 +89,14 @@
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
   // ---- CONFIGURE THESE TWO VALUES ----
-  const SUPABASE_URL = 'https://cklnhvdqwimhahgqpzwz.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_KxGsyJSUvAD67MIVrB9MZw_4_zZz';
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
   // -------------------------------------
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const verifying = document.getElementById('verifying');
+  const confirmStep = document.getElementById('confirmStep');
+  const confirmBtn = document.getElementById('confirmBtn');
   const form = document.getElementById('resetForm');
   const messageBox = document.getElementById('messageBox');
   const submitBtn = document.getElementById('submitBtn');
@@ -99,32 +105,35 @@
     messageBox.innerHTML = `<div class="message ${type}">${text}</div>`;
   }
 
-  let sessionReady = false;
+  const params = new URLSearchParams(window.location.search);
+  const tokenHash = params.get('token_hash');
+  const type = params.get('type') || 'recovery';
 
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'PASSWORD_RECOVERY') {
-      sessionReady = true;
-      verifying.style.display = 'none';
+  if (!tokenHash) {
+    confirmStep.style.display = 'none';
+    showMessage('This reset link is missing required info. Please request a new one.', 'error');
+  }
+
+  confirmBtn.addEventListener('click', async () => {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Verifying…';
+
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type,
+    });
+
+    if (error) {
+      showMessage(
+        'This reset link is invalid or has expired. Please request a new one.',
+        'error'
+      );
+      confirmStep.style.display = 'none';
+    } else {
+      confirmStep.style.display = 'none';
       form.style.display = 'block';
     }
   });
-
-  // Fallback: if a session already exists when the page loads
-  // (covers some PKCE/code-exchange timing cases)
-  supabase.auth.getSession().then(({ data }) => {
-    if (data.session && !sessionReady) {
-      sessionReady = true;
-      verifying.style.display = 'none';
-      form.style.display = 'block';
-    }
-  });
-
-  // If nothing fires within a few seconds, the link is likely invalid or expired
-  setTimeout(() => {
-    if (!sessionReady) {
-      verifying.textContent = 'This reset link is invalid or has expired. Please request a new one.';
-    }
-  }, 4000);
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();

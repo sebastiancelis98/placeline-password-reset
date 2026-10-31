@@ -74,10 +74,10 @@
   <form id="resetForm" style="display:none;">
     <p class="sub">Enter a new password for your account.</p>
     <label for="password">New password</label>
-    <input type="password" id="password" minlength="6" required placeholder="At least 6 characters" />
+    <input type="password" id="password" minlength="8" required placeholder="At least 8 characters" />
 
     <label for="confirm">Confirm password</label>
-    <input type="password" id="confirm" minlength="6" required placeholder="Re-enter password" />
+    <input type="password" id="confirm" minlength="8" required placeholder="Re-enter password" />
 
     <button type="submit" id="submitBtn">Update password</button>
   </form>
@@ -90,7 +90,7 @@
 
   // ---- CONFIGURE THESE TWO VALUES ----
   const SUPABASE_URL = 'https://cklnhvdqwimhahgqpzwz.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNrbG5odmRxd2ltaGFoZ3Fwend6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyMjU1OTEsImV4cCI6MjA5NDgwMTU5MX0.ExFc-13IZhUyf730XUSGgHa605T-2979yjkcLMMYhFo';
+  const SUPABASE_ANON_KEY = '******';
   // -------------------------------------
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
